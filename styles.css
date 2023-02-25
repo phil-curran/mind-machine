@@ -1,0 +1,54 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
+body,
+html {
+  background-color: #292929;
+  margin: 0 auto;
+  padding: 0;
+  color: white;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 7% auto;
+  padding: 0;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 48;
+  font-size: 2em;
+}
+
+#start {
+  background-color: #1abc9c;
+}
+
+#stop {
+  background-color: #e74c3c;
+}
+
+.levelLabel {
+  position: relative;
+  top: -1em;
+}
+
+h1 {
+  color: #a3a3a3;
+  text-align: center;
+}
+
+.leftNumber {
+  color: #525252;
+  text-align: left;
+}
+
+.middleNumber {
+  color: #a3a3a3;
+  text-align: center;
+}
+
+.rightNumber {
+  color: #525252;
+  text-align: right;
+}

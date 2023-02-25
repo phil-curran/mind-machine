@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindmachine | Phil Curran</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>mindmachine</h1>
+      <div class="grid">
+        <!-- select base frequency / note -->
+        <div>
+          <label for="baseFrequency">Base Frequency</label>
+          <select id="baseFrequency" required>
+            <option value="32.11" selected>C1 (32.11hz)</option>
+            <option value="34.65">C#1 (34.65hz)</option>
+            <option value="37.41">D1 (37.41hz)</option>
+            <option value="40.41">D#1 (40.41hz)</option>
+            <option value="43.65">E1 (43.65hz)</option>
+            <option value="47.13">F1 (47.13hz)</option>
+            <option value="50.87">F#1 (50.87hz)</option>
+            <option value="54.88">G1 (54.88hz)</option>
+            <option value="59.17">G#1 (59.17hz)</option>
+            <option value="63.75">A1 (63.75hz)</option>
+            <option value="68.65">A#1 (68.65hz)</option>
+            <option value="73.87">B1 (73.87hz)</option>
+            <option value="79.42">C2 (79.42hz)</option>
+            <option value="85.31">C#2 (85.31hz)</option>
+            <option value="91.55">D2 (91.55hz)</option>
+            <option value="98.16">D#2 (98.16hz)</option>
+            <option value="105.15">E2 (105.15hz)</option>
+            <option value="112.53">F2 (112.53hz)</option>
+            <option value="120.32">F#2 (120.32hz)</option>
+            <option value="128.54">G2 (128.54hz)</option>
+            <option value="137.19">G#2 (137.19hz)</option>
+            <option value="146.31">A2 (146.31hz)</option>
+            <option value="155.91">A#2 (155.91hz)</option>
+            <option value="165.99">B2 (165.99hz)</option>
+            <option value="176.59">C3 (176.59hz)</option>
+          </select>
+        </div>
+        <!-- select wavestate -->
+        <div>
+          <label for="waveState">Wave State</label>
+          <select id="waveState" required>
+            <option value="delta" selected>Delta (0.5hz - 4hz)</option>
+            <option value="theta">Theta (4hz - 8hz)</option>
+            <option value="alpha">Alpha (8hz - 13hz)</option>
+            <option value="beta">Beta (13hz - 30hz)</option>
+            <option value="gamma">Gamma (30hz - 100hz)</option>
+          </select>
+        </div>
+      </div>
+      <!-- select beats frequency -->
+      <div class="grid">
+        <div>
+          <label for="beatsFrequency">Beats Frequency</label>
+          <input
+            type="range"
+            id="beatsFrequency"
+            min="`${splitLow}`"
+            value="`${splitMiddle}`"
+            max="`${splitHigh}`"
+            step="0.05"
+          />
+          <div class="grid levelLabel">
+            <div id="beatsFreqLow" class="column leftNumber">0.50</div>
+            <div id="beatsFreqMid" class="column middleNumber">2.25</div>
+            <div id="beatsFreqHigh" class="column rightNumber">4.00</div>
+          </div>
+        </div>
+      </div>
+      <!-- adjust master volume -->
+      <div class="grid">
+        <div>
+          <label for="volume-control">Master Volume</label>
+          <input
+            type="range"
+            id="masterVolume"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.5"
+          />
+          <div class="grid levelLabel">
+            <div class="column leftNumber">0</div>
+            <div id="masterVolumeCurrentValue" class="column middleNumber">
+              0.5
+            </div>
+            <div class="column rightNumber">1</div>
+          </div>
+        </div>
+      </div>
+      <!-- adjust low frequency volume submixer -->
+      <div class="grid">
+        <div>
+          <label for="volume-control">Low Volume</label>
+          <input
+            type="range"
+            id="lowVolume"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.3"
+          />
+          <div class="grid levelLabel">
+            <div class="column leftNumber">0</div>
+            <div id="lowMasterVolume" class="column middleNumber">0.3</div>
+            <div class="column rightNumber">1</div>
+          </div>
+        </div>
+        <!-- adjust mid frequency volume submixer -->
+        <div>
+          <label for="volume-control">Mid Volume</label>
+          <input
+            type="range"
+            id="midVolume"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.2"
+          />
+          <div class="grid levelLabel">
+            <div class="column leftNumber">0</div>
+            <div id="midMasterVolume" class="column middleNumber">0.2</div>
+            <div class="column rightNumber">1</div>
+          </div>
+        </div>
+        <!-- adjust high frequency volume submixer -->
+        <div>
+          <label for="volume-control">High Volume</label>
+          <input
+            type="range"
+            id="highVolume"
+            min="0"
+            max="1"
+            step="0.05"
+            value="0.1"
+          />
+          <div class="grid levelLabel">
+            <div class="column leftNumber">0</div>
+            <div id="highMasterVolume" class="column middleNumber">0.1</div>
+            <div class="column rightNumber">1</div>
+          </div>
+        </div>
+      </div>
+      <!-- play and stop -->
+      <div class="grid">
+        <div>
+          <button id="start">
+            <span class="material-symbols-outlined"> play_circle </span>
+          </button>
+        </div>
+        <div>
+          <button id="stop">
+            <span class="material-symbols-outlined"> stop_circle </span>
+          </button>
+        </div>
+      </div>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>
