@@ -65,9 +65,9 @@
           <input
             type="range"
             id="beatsFrequency"
-            min="`${splitLow}`"
-            value="`${splitMiddle}`"
-            max="`${splitHigh}`"
+            min="0.5"
+            value="2.25"
+            max="4"
             step="0.05"
           />
           <div class="grid levelLabel">
@@ -134,21 +134,42 @@
           </div>
         </div>
         <!-- adjust high frequency volume submixer -->
-        <div>
-          <label for="volume-control">High Volume</label>
-          <input
-            type="range"
-            id="highVolume"
-            min="0"
-            max="1"
-            step="0.05"
-            value="0.1"
-          />
-          <div class="grid levelLabel">
-            <div class="column leftNumber">0</div>
-            <div id="highMasterVolume" class="column middleNumber">0.1</div>
-            <div class="column rightNumber">1</div>
+        </div>
+        <div class="grid">
+          <div>
+            <label for="volume-control">High Volume</label>
+            <input
+              type="range"
+              id="highVolume"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.1"
+            />
+            <div class="grid levelLabel">
+              <div class="column leftNumber">0</div>
+              <div id="highMasterVolume" class="column middleNumber">0.1</div>
+              <div class="column rightNumber">1</div>
+            </div>
           </div>
+          <!-- adjust click volume -->
+          <div>
+            <label for="volume-control">Click Volume</label>
+            <input
+              type="range"
+              id="clickVolume"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.5"
+            />
+            <div class="grid levelLabel">
+              <div class="column leftNumber">0</div>
+              <div id="clickVolumeLevel" class="column middleNumber">0.5</div>
+              <div class="column rightNumber">1</div>
+            </div>
+          </div>
+
         </div>
       </div>
       <!-- play and stop -->

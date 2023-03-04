@@ -2,6 +2,102 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const context = new AudioContext();
 
+// set default frequency values
+let base = 32.7;
+let splitLow = 0.5;
+let splitMiddle = 2.25;
+let splitHigh = 4;
+
+class Metronome {
+  constructor(tempo, context, destination) {
+    this.audioContext = context;
+    this.notesInQueue = []; // notes that have been put into the web audio and may or may not have been played yet {note, time}
+    this.currentBeatInBar = 0;
+    this.beatsPerBar = 4;
+    this.tempo = tempo;
+    this.lookahead = 25; // How frequently to call scheduling function (in milliseconds)
+    this.scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+    this.nextNoteTime = 0.0; // when the next note is due
+    this.isRunning = false;
+    this.intervalID = null;
+    this.destination = destination;
+  }
+
+  nextNote() {
+    // Advance current note and time by a quarter note (crotchet if you're posh)
+    var secondsPerBeat = 60.0 / this.tempo;
+    // Notice this picks up the CURRENT tempo value to calculate beat length.
+    this.nextNoteTime += secondsPerBeat; // Add beat length to last beat time
+
+    this.currentBeatInBar++; // Advance the beat number, wrap to zero
+    if (this.currentBeatInBar == this.beatsPerBar) {
+      this.currentBeatInBar = 0;
+    }
+  }
+
+  scheduleNote(beatNumber, time) {
+    // push the note on the queue, even if we're not playing.
+    this.notesInQueue.push({ note: beatNumber, time: time });
+
+    // create an oscillator
+    const osc = this.audioContext.createOscillator();
+    const envelope = this.audioContext.createGain();
+
+    osc.frequency.value = 16.4;
+    osc.type = "square";
+    envelope.gain.value = 1;
+    envelope.gain.exponentialRampToValueAtTime(0.4, time + 0.001);
+    envelope.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+
+    osc.connect(envelope);
+    envelope.connect(this.destination);
+
+    osc.start(time);
+    osc.stop(time + 0.03);
+  }
+
+  scheduler() {
+    // while there are notes that will need to play before the next interval, schedule them and advance the pointer.
+    while (
+      this.nextNoteTime <
+      this.audioContext.currentTime + this.scheduleAheadTime
+    ) {
+      this.scheduleNote(this.currentBeatInBar, this.nextNoteTime);
+      this.nextNote();
+    }
+  }
+
+  start() {
+    if (this.isRunning) return;
+
+    if (this.audioContext == null) {
+      this.audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+    }
+
+    this.isRunning = true;
+
+    this.currentBeatInBar = 0;
+    this.nextNoteTime = this.audioContext.currentTime + 0.05;
+
+    this.intervalID = setInterval(() => this.scheduler(), this.lookahead);
+  }
+
+  stop() {
+    this.isRunning = false;
+
+    clearInterval(this.intervalID);
+  }
+
+  startStop() {
+    if (this.isRunning) {
+      this.stop();
+    } else {
+      this.start();
+    }
+  }
+}
+
 // create gain contexts
 const masterVolume = context.createGain();
 const osc1Volume = context.createGain();
@@ -13,12 +109,7 @@ const midVolume = context.createGain();
 const osc5Volume = context.createGain();
 const osc6Volume = context.createGain();
 const highVolume = context.createGain();
-
-// set default frequency values
-let base = 32.7;
-let splitLow = 0.5;
-let splitMiddle = 2.25;
-let splitHigh = 4;
+const clickVolume = context.createGain();
 
 // create osc 1
 const oscillator1 = context.createOscillator();
@@ -93,6 +184,8 @@ midVolume.gain.value = 0.3;
 midVolume.connect(masterVolume);
 highVolume.gain.value = 0.2;
 highVolume.connect(masterVolume);
+clickVolume.gain.value = 0.5;
+clickVolume.connect(masterVolume);
 masterVolume.gain.value = 0.6;
 masterVolume.connect(context.destination);
 
@@ -103,6 +196,7 @@ const masterVolumeControl = document.querySelector("#masterVolume");
 const lowVolumeControl = document.querySelector("#lowVolume");
 const midVolumeControl = document.querySelector("#midVolume");
 const highVolumeControl = document.querySelector("#highVolume");
+const clickVolumeControl = document.querySelector("#clickVolume");
 const baseFrequency = document.querySelector("#baseFrequency");
 const beatsFrequency = document.querySelector("#beatsFrequency");
 const waveState = document.querySelector("#waveState");
@@ -112,6 +206,7 @@ masterVolumeControl.addEventListener("input", changeMasterVolume);
 lowVolumeControl.addEventListener("input", changeLowVolume);
 midVolumeControl.addEventListener("input", changeMidVolume);
 highVolumeControl.addEventListener("input", changeHighVolume);
+clickVolumeControl.addEventListener("input", changeClickVolume);
 baseFrequency.addEventListener("input", changeBaseFrequency);
 waveState.addEventListener("input", changeWaveState);
 beatsFrequency.addEventListener("input", changeBeatsFrequency);
@@ -132,6 +227,7 @@ function updateFrequencies() {
     Math.round(parseFloat(base * 4 + splitMiddle / 4) * 100) / 100;
   oscillator6.frequency.value =
     Math.round(parseFloat(base * 4 - splitMiddle / 4) * 100) / 100;
+  // metronome.tempo = parseFloat(splitMiddle * 60);
 }
 
 // get & set base frequency
@@ -164,65 +260,68 @@ function changeHighVolume() {
   highVolume.gain.value = this.value;
 }
 
-// constants for brain wave state frequency ranges
-const delta = [0.5, 2.25, 4.0];
-const theta = [4.0, 6.0, 8.0];
-const alpha = [8.0, 10.5, 13.0];
-const beta = [13.0, 21.5, 30.0];
-const gamma = [30.0, 65.0, 100];
+// adjust click volume submixer
+function changeClickVolume() {
+  document.querySelector("#clickVolumeLevel").innerHTML = this.value;
+  clickVolume.gain.value = this.value;
+}
 
 // dropdown for changing brain wave state
 function changeWaveState() {
   let temp = this.value;
   if (temp == "delta") {
-    splitLow = delta[0];
-    splitMiddle = delta[1];
-    splitHigh = delta[2];
+    splitLow = 0.5;
+    splitMiddle = 2.25;
+    splitHigh = 4;
   } else if (temp == "theta") {
-    splitLow = theta[0];
-    splitMiddle = theta[1];
-    splitHigh = theta[2];
+    splitLow = 4;
+    splitMiddle = 6;
+    splitHigh = 8;
   } else if (temp == "alpha") {
-    splitLow = alpha[0];
-    splitMiddle = alpha[1];
-    splitHigh = alpha[2];
+    splitLow = 8;
+    splitMiddle = 10.5;
+    splitHigh = 13;
   } else if (temp == "beta") {
-    splitLow = beta[0];
-    splitMiddle = beta[1];
-    splitHigh = beta[2];
+    splitLow = 13;
+    splitMiddle = 21.5;
+    splitHigh = 30;
   } else if (temp == "gamma") {
-    splitLow = gamma[0];
-    splitMiddle = gamma[1];
-    splitHigh = gamma[2];
+    splitLow = 30;
+    splitMiddle = 65;
+    splitHigh = 100;
   }
   document.querySelector("#beatsFreqLow").innerText = splitLow;
   beatsFrequency.setAttribute("min", parseFloat(splitLow));
   document.querySelector("#beatsFreqMid").innerText = splitMiddle;
   beatsFrequency.setAttribute("value", parseFloat(splitMiddle));
+  metronome.tempo = parseFloat(splitMiddle * 60);
   document.querySelector("#beatsFreqHigh").innerText = splitHigh;
   beatsFrequency.setAttribute("max", parseFloat(splitHigh));
-  // updateFrequencies();
-}
-
-// change beats frequency via slider
-function changeBeatsFrequency() {
-  document.querySelector("#beatsFreqMid").innerHTML = this.value;
-  splitMiddle = this.value;
   updateFrequencies();
 }
 
+// change beats frequency via slider
+function changeBeatsFrequency(splitMiddle) {
+  document.querySelector("#beatsFreqMid").innerHTML = this.value;
+  splitMiddle = this.value;
+  updateFrequencies();
+  metronome.tempo = parseFloat(splitMiddle * 60);
+}
+
+var metronome = new Metronome(splitMiddle * 60, context, clickVolume);
+
+// connect metronome to clickVolume
+// metronome.connect(clickVolume);
+
 // start oscillators
 startButton.addEventListener("click", () => {
-  let base = 32.7;
-  let splitLow = 0.5;
-  let splitMiddle = 2.25;
-  let splitHigh = 4;
   oscillator1.start(0);
   oscillator2.start(0);
   oscillator3.start(0);
   oscillator4.start(0);
   oscillator5.start(0);
   oscillator6.start(0);
+  metronome.start();
 });
 
 // stop oscillators
@@ -233,12 +332,7 @@ stopButton.addEventListener("click", function () {
   oscillator4.stop(0);
   oscillator5.stop(0);
   oscillator6.stop(0);
-  delete oscillator1;
-  delete oscillator2;
-  delete oscillator3;
-  delete oscillator4;
-  delete oscillator5;
-  delete oscillator6;
+  metronome.stop();
   // to avoid duplicate start() calls
   location.reload();
 });
